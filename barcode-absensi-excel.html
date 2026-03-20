@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generator Kartu Barcode Absensi - Import Excel</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.5/JsBarcode.all.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #1a1a2e;
+            --secondary: #16c784;
+            --accent: #ff6b6b;
+            --light: #f5f5f5;
+            --border: #e0e0e0;
+            --text: #333;
+            --text-light: #666;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: var(--text);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: var(--primary);
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .subtitle {
+            color: #ccc;
+            font-size: 14px;
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .panel {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+
+        .panel h2 {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .panel h2::before {
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: var(--secondary);
+            border-radius: 2px;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            font-size: 14px;
+            color: var(--text);
+        }
+
+        input[type="text"],
+        input[type="file"],
+        select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1.5px solid var(--border);
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+
+        input[type="text"]:focus,
+        input[type="file"]:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--secondary);
+            box-shadow: 0 0 0 3px rgba(22, 199, 132, 0.1);
+        }
+
+        .file-upload {
+            position: relative;
+            display: block;
+        }
+
+        .file-upload input[type="file"] {
+            display: none;
+        }
+
+        .file-upload-label {
+            display: block;
+            padding: 20px;
+            border: 2px dashed var(--secondary);
+            border-radius: 6px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f0f9f8;
+        }
+
+        .file-upload-label:hover {
+            background: #e8f7f5;
+            border-color: #14b870;
+        }
+
+        .file-upload-label.active {
+            background: #e8f7f5;
+            border-color: #14b870;
+        }
+
+        .file-name {
+            margin-top: 8px;
+            font-size: 12px;
+            color: var(--secondary);
+            font-weight: 500;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: var(--secondary);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: #14b870;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(22, 199, 132, 0.3);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: var(--light);
+            color: var(--text);
+            border: 1.5px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: #fff;
+            border-color: var(--secondary);
+        }
+
+        .btn-danger {
+            background: var(--accent);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #ff5252;
+            transform: translateY(-2px);
+        }
+
+        .info-box {
+            background: #e8f9f5;
+            border-left: 4px solid var(--secondary);
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            color: #2d5f4f;
+            margin-bottom: 15px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, var(--secondary) 0%, #12a765 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .preview-container {
+            margin-top: 30px;
+        }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: white;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .card:hover {
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            transform: translateY(-4px);
+        }
+
+        .card-header {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--primary);
+            font-size: 13px;
+        }
+
+        .barcode-wrapper {
+            background: white;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: center;
+        }
+
+        svg {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .card-id {
+            font-size: 12px;
+            color: var(--text-light);
+            word-break: break-all;
+            font-family: 'Courier New', monospace;
+        }
+
+        .print-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn-print {
+            background: var(--primary);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-print:hover {
+            background: #2d2d4a;
+            transform: translateY(-2px);
+        }
+
+        @media print {
+            body {
+                background: white;
+            }
+
+            header,
+            .content,
+            .print-controls,
+            .btn-print,
+            .button-group {
+                display: none;
+            }
+
+            .cards-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 20px;
+                page-break-inside: avoid;
+            }
+
+            .card {
+                page-break-inside: avoid;
+                border: 1px solid #ccc;
+                padding: 20px;
+            }
+
+            .preview-container {
+                margin: 0;
+            }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-light);
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+
+        .loader {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid var(--secondary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--primary);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            animation: slideIn 0.3s ease;
+            z-index: 1000;
+            max-width: 400px;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .sheet-selector {
+            margin-bottom: 15px;
+        }
+
+        .table-preview {
+            width: 100%;
+            font-size: 12px;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        .table-preview th,
+        .table-preview td {
+            padding: 8px;
+            border: 1px solid var(--border);
+            text-align: left;
+        }
+
+        .table-preview th {
+            background: #f5f5f5;
+            font-weight: 600;
+        }
+
+        .download-link {
+            color: var(--secondary);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .download-link:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+
+            h1 {
+                font-size: 22px;
+            }
+
+            .cards-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            }
+
+            .print-controls {
+                flex-direction: column;
+            }
+
+            .btn-print {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎫 Generator Kartu Barcode Absensi</h1>
+            <p class="subtitle">Import data siswa dari Excel dan buat kartu barcode dengan mudah</p>
+        </header>
+
+        <div class="content">
+            <!-- Panel Upload -->
+            <div class="panel">
+                <h2>Upload File Excel</h2>
+                
+                <div class="info-box">
+                    📋 Format Excel: Kolom A = NIS, Kolom B = Nama Siswa, Kolom C = Kelas
+                </div>
+
+                <div class="form-group">
+                    <label>Nama Sekolah/Institusi</label>
+                    <input type="text" id="schoolName" placeholder="Contoh: SMA Negeri 1 Jakarta" value="SMA NEGERI 1">
+                </div>
+
+                <div class="form-group">
+                    <label>Upload File Excel (.xlsx atau .csv)</label>
+                    <div class="file-upload">
+                        <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" onchange="handleFileUpload(event)">
+                        <label for="fileInput" class="file-upload-label" id="uploadLabel">
+                            <div style="font-size: 24px; margin-bottom: 8px;">📁</div>
+                            <div style="font-weight: 600; color: var(--primary);">Klik atau drag file Excel di sini</div>
+                            <div style="font-size: 12px; color: var(--text-light); margin-top: 4px;">Ukuran maksimal: 5MB</div>
+                            <div class="file-name" id="fileName"></div>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group" id="sheetSelector" style="display: none;">
+                    <label>Pilih Sheet</label>
+                    <select id="sheetList" onchange="previewSheet()"></select>
+                </div>
+
+                <div id="tablePreview"></div>
+
+                <div class="button-group" style="margin-top: 20px;">
+                    <button class="btn-primary" id="generateBtn" onclick="generateCards()" disabled>Generate Kartu</button>
+                    <button class="btn-secondary" onclick="clearForm()">Bersihkan</button>
+                </div>
+
+                <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border);">
+                    <p style="font-size: 13px; color: var(--text-light); margin-bottom: 10px;"><strong>📥 Download Template:</strong></p>
+                    <button onclick="downloadTemplate()" class="btn-secondary" style="width: 100%; margin: 0;">Download Template Excel</button>
+                </div>
+            </div>
+
+            <!-- Panel Info & Stats -->
+            <div class="panel">
+                <h2>Informasi & Status</h2>
+
+                <div class="stats">
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalCount">0</div>
+                        <div class="stat-label">Total Kartu</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="status">⏳</div>
+                        <div class="stat-label">Status</div>
+                    </div>
+                </div>
+
+                <div class="info-box">
+                    <strong>📖 Cara Penggunaan:</strong><br>
+                    1. Download template Excel (opsional)<br>
+                    2. Isi data siswa di Excel Anda<br>
+                    3. Upload file Excel di sini<br>
+                    4. Klik "Generate Kartu"<br>
+                    5. Cetak kartu langsung
+                </div>
+
+                <div style="background: #f9f9f9; padding: 15px; border-radius: 6px; margin-top: 15px; font-size: 13px;">
+                    <p><strong>✅ Format Data Excel:</strong></p>
+                    <table class="table-preview" style="margin-top: 10px;">
+                        <tr>
+                            <th>NIS</th>
+                            <th>NAMA</th>
+                            <th>KELAS</th>
+                        </tr>
+                        <tr>
+                            <td>001</td>
+                            <td>Ahmad Rizki</td>
+                            <td>10-A</td>
+                        </tr>
+                        <tr>
+                            <td>002</td>
+                            <td>Budi Santoso</td>
+                            <td>10-B</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div style="background: #f9f9f9; padding: 15px; border-radius: 6px; margin-top: 15px; font-size: 13px;">
+                    <p><strong>💾 Tips Cetak:</strong></p>
+                    <ul style="margin-left: 20px; margin-top: 8px; line-height: 1.6;">
+                        <li>Kertas HVS putih A4</li>
+                        <li>Resolusi 300 DPI</li>
+                        <li>Potong sesuai garis tepi</li>
+                        <li>Laminating untuk tahan lama</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Preview & Print -->
+        <div class="panel">
+            <div class="print-controls" id="printControls" style="display: none;">
+                <button class="btn-print" onclick="window.print()">🖨️ Cetak Kartu</button>
+                <button class="btn-print" onclick="downloadAsZip()" style="background: var(--secondary);">📦 Download ZIP</button>
+                <button class="btn-print" onclick="downloadDataCSV()" style="background: #ff9500;">📥 Download CSV</button>
+                <button class="btn-danger" onclick="clearPreview()">🗑️ Hapus Semua</button>
+            </div>
+
+            <div id="preview" class="preview-container"></div>
+        </div>
+    </div>
+
+    <script>
+        let uploadedData = [];
+        let currentSheet = null;
+
+        // Drag & drop
+        const uploadLabel = document.getElementById('uploadLabel');
+        document.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadLabel.classList.add('active');
+        });
+        document.addEventListener('dragleave', () => {
+            uploadLabel.classList.remove('active');
+        });
+        document.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadLabel.classList.remove('active');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                document.getElementById('fileInput').files = files;
+                handleFileUpload({target: document.getElementById('fileInput')});
+            }
+        });
+
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            document.getElementById('fileName').textContent = `✓ ${file.name}`;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, {type: 'array'});
+                    
+                    // Show sheet selector
+                    const sheetSelector = document.getElementById('sheetSelector');
+                    const sheetList = document.getElementById('sheetList');
+                    
+                    sheetList.innerHTML = '';
+                    workbook.SheetNames.forEach((sheet, index) => {
+                        const option = document.createElement('option');
+                        option.value = index;
+                        option.textContent = sheet;
+                        sheetList.appendChild(option);
+                    });
+                    
+                    sheetSelector.style.display = workbook.SheetNames.length > 1 ? 'block' : 'none';
+                    currentSheet = workbook;
+                    previewSheet();
+                    
+                    document.getElementById('generateBtn').disabled = false;
+                } catch (error) {
+                    showToast('❌ Error membaca file Excel: ' + error.message);
+                    document.getElementById('generateBtn').disabled = true;
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function previewSheet() {
+            if (!currentSheet) return;
+            
+            const sheetIndex = parseInt(document.getElementById('sheetList').value) || 0;
+            const sheetName = currentSheet.SheetNames[sheetIndex];
+            const worksheet = currentSheet.Sheets[sheetName];
+            const data = XLSX.utils.sheet_to_json(worksheet, {header: 1});
+            
+            uploadedData = data.slice(1).map(row => ({
+                nis: String(row[0] || '').trim(),
+                nama: String(row[1] || '').trim(),
+                kelas: String(row[2] || '').trim()
+            })).filter(d => d.nis && d.nama);
+
+            // Preview table
+            let html = '<table class="table-preview"><tr><th>NIS</th><th>NAMA</th><th>KELAS</th></tr>';
+            uploadedData.slice(0, 5).forEach(row => {
+                html += `<tr><td>${row.nis}</td><td>${row.nama}</td><td>${row.kelas || '-'}</td></tr>`;
+            });
+            if (uploadedData.length > 5) {
+                html += `<tr><td colspan="3" style="text-align: center; font-style: italic;">... dan ${uploadedData.length - 5} baris lainnya</td></tr>`;
+            }
+            html += '</table>';
+            
+            document.getElementById('tablePreview').innerHTML = html;
+            document.getElementById('totalCount').textContent = uploadedData.length;
+            document.getElementById('status').textContent = uploadedData.length > 0 ? '✓' : '⏳';
+        }
+
+        function generateCards() {
+            if (uploadedData.length === 0) {
+                showToast('⚠️ Tidak ada data siswa!');
+                return;
+            }
+
+            const schoolName = document.getElementById('schoolName').value || 'SEKOLAH';
+            let html = '<div class="cards-grid">';
+            
+            uploadedData.forEach((student, index) => {
+                const barcodeValue = `${schoolName.substring(0,3).toUpperCase()}${String(student.nis).padStart(5, '0')}`;
+                
+                html += `
+                    <div class="card">
+                        <div class="card-header">${schoolName}</div>
+                        <div class="barcode-wrapper">
+                            <svg id="barcode-${index}"></svg>
+                        </div>
+                        <div style="margin-bottom: 8px; font-size: 13px; color: var(--primary); font-weight: 600;">
+                            ${student.nama}
+                        </div>
+                        <div style="margin-bottom: 6px; font-size: 11px; color: var(--text-light);">
+                            Kelas: ${student.kelas || '-'}
+                        </div>
+                        <div class="card-id">NIS: ${student.nis}</div>
+                    </div>
+                `;
+            });
+
+            html += '</div>';
+
+            const preview = document.getElementById('preview');
+            preview.innerHTML = html;
+
+            // Generate barcodes
+            uploadedData.forEach((student, index) => {
+                const barcodeValue = `${schoolName.substring(0,3).toUpperCase()}${String(student.nis).padStart(5, '0')}`;
+                try {
+                    JsBarcode(`#barcode-${index}`, barcodeValue, {
+                        format: "CODE128",
+                        width: 2,
+                        height: 50,
+                        displayValue: true,
+                        fontSize: 10
+                    });
+                } catch (e) {
+                    console.log('Barcode error:', e);
+                }
+            });
+
+            document.getElementById('printControls').style.display = 'flex';
+            showToast(`✅ ${uploadedData.length} kartu berhasil dibuat!`);
+        }
+
+        function downloadTemplate() {
+            const ws = XLSX.utils.aoa_to_sheet([
+                ['NIS', 'NAMA'],
+                ['001', 'Ahmad Rizki'],
+                ['002', 'Budi Santoso'],
+                ['003', 'Citra Dewi'],
+                ['004', 'Dini Saputri'],
+                ['005', 'Eka Putra']
+            ]);
+            
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Siswa');
+            
+            ws['A1'].font = {bold: true};
+            ws['B1'].font = {bold: true};
+            ws['!cols'] = [{wch: 10}, {wch: 25}];
+            
+            XLSX.writeFile(wb, 'template-siswa.xlsx');
+        }
+
+        function downloadDataCSV() {
+            const schoolName = document.getElementById('schoolName').value || 'SEKOLAH';
+            
+            let csv = 'Kode Barcode,NIS,Nama Siswa,Kelas\n';
+            
+            uploadedData.forEach(student => {
+                const barcode = `${schoolName.substring(0,3).toUpperCase()}${String(student.nis).padStart(5, '0')}`;
+                csv += `${barcode},${student.nis},"${student.nama}","${student.kelas || '-'}"\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `data-absensi-${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+        }
+
+        function clearForm() {
+            document.getElementById('fileInput').value = '';
+            document.getElementById('fileName').textContent = '';
+            document.getElementById('tablePreview').innerHTML = '';
+            document.getElementById('totalCount').textContent = '0';
+            document.getElementById('status').textContent = '⏳';
+            uploadedData = [];
+            currentSheet = null;
+            document.getElementById('generateBtn').disabled = true;
+            document.getElementById('sheetSelector').style.display = 'none';
+            clearPreview();
+        }
+
+        function clearPreview() {
+            document.getElementById('preview').innerHTML = '<div class="empty-state"><div class="empty-state-icon">📭</div><p>Kartu akan ditampilkan di sini</p></div>';
+            document.getElementById('printControls').style.display = 'none';
+        }
+
+        function downloadAsZip() {
+            if (uploadedData.length === 0) {
+                showToast('⚠️ Tidak ada kartu untuk diunduh!');
+                return;
+            }
+
+            const schoolName = document.getElementById('schoolName').value || 'SEKOLAH';
+            const zip = new JSZip();
+            const timestamp = new Date().toISOString().split('T')[0];
+            const folderName = `Kartu-Barcode-${timestamp}`;
+            const folder = zip.folder(folderName);
+
+            // Generate HTML untuk setiap kartu
+            uploadedData.forEach((student, index) => {
+                const barcodeValue = `${schoolName.substring(0,3).toUpperCase()}${String(student.nis).padStart(5, '0')}`;
+                
+                const html = `<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kartu ${student.nama}</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.5/JsBarcode.all.min.js"><\/script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #f5f5f5; padding: 20px; }
+        .card { background: white; width: 250px; padding: 20px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; }
+        .card-header { font-weight: bold; font-size: 14px; margin-bottom: 15px; color: #1a1a2e; }
+        .barcode-wrapper { background: white; padding: 15px; border-radius: 4px; margin-bottom: 15px; display: flex; justify-content: center; }
+        .card-name { font-weight: 600; font-size: 14px; color: #1a1a2e; margin-bottom: 8px; }
+        .card-class { font-size: 12px; color: #666; margin-bottom: 6px; }
+        .card-nis { font-size: 12px; color: #666; font-family: 'Courier New', monospace; }
+        @media print {
+            body { background: white; padding: 0; }
+            .card { box-shadow: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="card-header">${schoolName}</div>
+        <div class="barcode-wrapper">
+            <svg id="barcode"></svg>
+        </div>
+        <div class="card-name">${student.nama}</div>
+        <div class="card-class">Kelas: ${student.kelas || '-'}</div>
+        <div class="card-nis">NIS: ${student.nis}</div>
+    </div>
+    <script>
+        JsBarcode("#barcode", "${barcodeValue}", {
+            format: "CODE128",
+            width: 2,
+            height: 50,
+            displayValue: true,
+            fontSize: 10
+        });
+    <\/script>
+</body>
+</html>`;
+                
+                folder.file(`${String(index + 1).padStart(3, '0')}-${student.nama.replace(/[^a-zA-Z0-9]/g, '_')}.html`, html);
+            });
+
+            // Generate file index untuk preview semua
+            const indexHtml = `<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daftar Kartu Barcode</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; padding: 20px; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); min-height: 100vh; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        h1 { color: #1a1a2e; margin-bottom: 10px; }
+        .subtitle { color: #666; margin-bottom: 25px; font-size: 14px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0; }
+        th { background: #16c784; color: white; font-weight: 600; }
+        tr:hover { background: #f5f5f5; }
+        a { color: #16c784; text-decoration: none; font-weight: 500; }
+        a:hover { text-decoration: underline; }
+        .total { margin-top: 20px; padding: 15px; background: #e8f9f5; border-left: 4px solid #16c784; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📋 Daftar Kartu Barcode</h1>
+        <p class="subtitle">Klik nama siswa untuk melihat kartu barcode individual</p>
+        
+        <table>
+            <tr>
+                <th>No</th>
+                <th>NIS</th>
+                <th>Nama Siswa</th>
+                <th>Kelas</th>
+                <th>Aksi</th>
+            </tr>
+            ${uploadedData.map((student, idx) => `
+            <tr>
+                <td>${idx + 1}</td>
+                <td>${student.nis}</td>
+                <td>${student.nama}</td>
+                <td>${student.kelas || '-'}</td>
+                <td><a href="${String(idx + 1).padStart(3, '0')}-${student.nama.replace(/[^a-zA-Z0-9]/g, '_')}.html" target="_blank">Lihat Kartu</a></td>
+            </tr>
+            `).join('')}
+        </table>
+        
+        <div class="total">
+            <strong>Total Kartu:</strong> ${uploadedData.length} siswa
+        </div>
+    </div>
+</body>
+</html>`;
+
+            folder.file('INDEX.html', indexHtml);
+
+            // Generate CSV juga dalam ZIP
+            let csv = 'Kode Barcode,NIS,Nama Siswa,Kelas\n';
+            uploadedData.forEach(student => {
+                const barcode = `${schoolName.substring(0,3).toUpperCase()}${String(student.nis).padStart(5, '0')}`;
+                csv += `${barcode},${student.nis},"${student.nama}","${student.kelas || '-'}"\n`;
+            });
+            folder.file('DATA-SISWA.csv', csv);
+
+            // Download ZIP
+            zip.generateAsync({type: 'blob'}).then(content => {
+                saveAs(content, `Kartu-Barcode-${schoolName.replace(/\s+/g, '_')}-${timestamp}.zip`);
+                showToast(`✅ Download ${uploadedData.length} kartu dalam ZIP berhasil!`);
+            });
+        }
+
+        function showToast(message) {
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        // Init
+        window.addEventListener('load', () => {
+            clearPreview();
+        });
+    </script>
+</body>
+</html>
