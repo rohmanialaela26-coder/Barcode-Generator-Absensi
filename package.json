@@ -1,0 +1,63 @@
+{
+  "name": "barcode-absensi-generator",
+  "version": "1.0.0",
+  "description": "Aplikasi web modern untuk membuat kartu barcode absensi siswa dengan mudah. Support import Excel, generate barcode otomatis, dan download ZIP.",
+  "main": "barcode-absensi-excel.html",
+  "scripts": {
+    "start": "http-server",
+    "dev": "http-server -p 8000",
+    "build": "minify barcode-absensi-excel.html > barcode-absensi-excel.min.html",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "docs": "echo \"Documentation is in README.md\""
+  },
+  "keywords": [
+    "barcode",
+    "absensi",
+    "sekolah",
+    "attendance",
+    "student",
+    "excel",
+    "generator",
+    "id-card",
+    "indonesia"
+  ],
+  "author": "Your Name <your.email@example.com>",
+  "license": "MIT",
+  "homepage": "https://github.com/username/barcode-absensi-generator",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/username/barcode-absensi-generator.git"
+  },
+  "bugs": {
+    "url": "https://github.com/username/barcode-absensi-generator/issues",
+    "email": "support@example.com"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "devDependencies": {
+    "http-server": "^14.1.1",
+    "minify": "^8.1.0"
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead"
+  ],
+  "funding": {
+    "type": "individual",
+    "url": "https://example.com/donate"
+  },
+  "contributors": [
+    {
+      "name": "Contributor One",
+      "email": "contributor1@example.com",
+      "url": "https://github.com/contributor1"
+    },
+    {
+      "name": "Contributor Two",
+      "email": "contributor2@example.com",
+      "url": "https://github.com/contributor2"
+    }
+  ]
+}

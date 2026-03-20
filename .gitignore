@@ -1,0 +1,75 @@
+# 🚫 Git Ignore File
+
+## Editor & IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+## Build & Dist
+dist/
+build/
+*.min.js
+*.min.css
+node_modules/
+package-lock.json
+yarn.lock
+
+## Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+## Testing
+coverage/
+.nyc_output/
+test-results/
+
+## Environment
+.env
+.env.local
+.env.*.local
+
+## OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+desktop.ini
+
+## Temporary
+tmp/
+temp/
+*.tmp
+*.bak
+*.orig
+
+## Local testing
+local-test/
+test-data/
+*.xlsx.bak
+
+## IDE specific
+.vscode/settings.json
+.vscode/launch.json
+*.sublime-project
+*.sublime-workspace
+
+## Project specific
+config/local.js
+public/uploads/
+.cache/
+
+# Tapi TRACK file penting ini:
+!.gitkeep
+!src/**
+!docs/**
+!template-siswa.xlsx
+!barcode-absensi-excel.html
